@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartHunter | Application Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        function initTheme() {
+            const savedTheme = localStorage.getItem('sh_theme');
+            if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+            else document.documentElement.setAttribute('data-theme', new Date().getHours() >= 18 || new Date().getHours() < 6 ? 'dark' : 'light');
+        }
+        initTheme();
+    </script>
+
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --surface-color: #ffffff;
+            --bg-light: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --column-bg: #f1f5f9;
+            --card-hover: #ffffff;
+            --success-green: #10b981;
+            --danger-red: #ef4444;
+        }
+
+        [data-theme="dark"] {
+            --primary-blue: #3b82f6;
+            --surface-color: #1e293b;
+            --bg-light: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-light: #334155;
+            --column-bg: #0f172a;
+            --card-hover: #1e293b;
+        }
+
+        body { background-color: var(--bg-light); color: var(--text-main); font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; overflow-x: hidden; }
+        .text-muted { color: var(--text-muted) !important; }
+        p, h1, h2, h3, h4, h5, h6 { color: var(--text-main); }
+
+        .navbar-custom { background: var(--surface-color); border-bottom: 1px solid var(--border-light); padding: 15px 0; }
+        .brand-text { font-weight: 800; letter-spacing: -0.5px; color: var(--text-main); text-decoration: none;}
+        .brand-dot { color: var(--primary-blue); }
+        .nav-link { color: var(--text-muted); font-weight: 500; transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-blue); }
+
+        .theme-btn { background: transparent; border: 1px solid var(--border-light); color: var(--text-main); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+
+        .header-section { background: var(--surface-color); border-bottom: 1px solid var(--border-light); padding: 20px 0; }
+
+        /* ⚡ KANBAN BOARD STYLES */
+        .kanban-board {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            overflow-x: auto;
+            min-height: calc(100vh - 200px);
+            align-items: flex-start;
+        }
+
+        .kanban-column {
+            background: var(--column-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            min-width: 320px;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+        }
+
+        .kanban-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-light);
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kanban-body {
+            padding: 15px;
+            flex-grow: 1;
+            min-height: 150px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .kanban-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: grab;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        
+        .kanban-card:active { cursor: grabbing; transform: scale(0.98); opacity: 0.8; }
+        .kanban-card:hover { border-color: var(--primary-blue); }
+
+        .badge-match { background: rgba(16, 185, 129, 0.15); color: var(--success-green); font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; font-weight: 700; }
+        .kanban-dropzone { border: 2px dashed var(--primary-blue) !important; background: rgba(37, 99, 235, 0.05) !important; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand brand-text fs-4" href="index.html">SmartHunter<span class="brand-dot">.</span></a>
+        <div class="d-flex align-items-center gap-3">
+            <button class="theme-btn" onclick="toggleTheme()" id="themeIcon">☀️</button>
+            <div class="d-none d-md-flex gap-3 me-3">
+                <a href="index.html" class="nav-link text-decoration-none">Hub</a>
+                <a href="saved-jobs.html" class="nav-link text-decoration-none fw-bold text-primary">Tracker</a>
+                <a href="analytics.html" class="nav-link text-decoration-none">Analytics</a>
+            </div>
+            <button class="btn border fw-medium" style="background: var(--bg-light); color: var(--text-main);" onclick="logout()">Sign Out</button>
+        </div>
+    </div>
+</nav>
+
+<section class="header-section">
+    <div class="container-fluid px-4">
+        <h3 class="fw-bold mb-1">Application Tracker</h3>
+        <p class="text-muted small mb-0">Drag and drop jobs to track your interview progress.</p>
+    </div>
+</section>
+
+<div class="kanban-board" id="board">
+    
+    <div class="kanban-column">
+        <div class="kanban-header">
+            <span style="color: var(--text-main);">📌 Saved</span>
+            <span class="badge bg-secondary" id="count-SAVED">0</span>
+        </div>
+        <div class="kanban-body" id="SAVED" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)">
+            </div>
+    </div>
+
+    <div class="kanban-column">
+        <div class="kanban-header">
+            <span style="color: var(--primary-blue);">🚀 Applied</span>
+            <span class="badge bg-primary" id="count-APPLIED">0</span>
+        </div>
+        <div class="kanban-body" id="APPLIED" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)"></div>
+    </div>
+
+    <div class="kanban-column">
+        <div class="kanban-header">
+            <span style="color: #f59e0b;">💬 Interviewing</span>
+            <span class="badge bg-warning text-dark" id="count-INTERVIEWING">0</span>
+        </div>
+        <div class="kanban-body" id="INTERVIEWING" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)"></div>
+    </div>
+
+    <div class="kanban-column">
+        <div class="kanban-header">
+            <span style="color: var(--success-green);">🎉 Offers</span>
+            <span class="badge bg-success" id="count-OFFER">0</span>
+        </div>
+        <div class="kanban-body" id="OFFER" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)"></div>
+    </div>
+
+    <div class="kanban-column" style="opacity: 0.8;">
+        <div class="kanban-header">
+            <span style="color: var(--danger-red);">❌ Rejected</span>
+            <span class="badge bg-danger" id="count-REJECTED">0</span>
+        </div>
+        <div class="kanban-body" id="REJECTED" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)"></div>
+    </div>
+
+</div>
+<div class="modal fade" id="coverLetterModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="background: var(--surface-color); color: var(--text-main); border: 1px solid var(--border-light);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" style="color: var(--primary-blue);">✨ AI Generated Cover Letter</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="small text-muted mb-3">Tailored specifically for you.</p>
+        
+        <div id="clLoader" class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="fw-medium">Llama 3 is writing your letter...</p>
+        </div>
+
+        <textarea id="clOutput" class="form-control d-none mb-3" rows="12" style="background: var(--bg-light); color: var(--text-main); border: 1px solid var(--border-light); border-radius: 8px; line-height: 1.6; resize: none;"></textarea>
+        
+        <button id="clCopyBtn" class="btn btn-primary w-100 d-none fw-bold" onclick="copyCoverLetter()">📋 Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('sh_theme', newTheme);
+        document.getElementById('themeIcon').innerText = newTheme === 'dark' ? '☀️' : '🌙';
+    }
+    document.getElementById('themeIcon').innerText = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+
+    function logout() {
+        localStorage.removeItem("hunter_user");
+        window.location.replace("login.html");
+    }
+
+    // ⚡ LOAD DATA & POPULATE COLUMNS
+    window.onload = async function loadSavedJobs() {
+        const email = localStorage.getItem("hunter_user");
+        if (!email) window.location.replace("login.html");
+
+        try {
+            const response = await fetch(`/api/saved-jobs/${email}`);
+            const jobs = await response.json();
+
+            jobs.forEach((job) => {
+                const card = document.createElement("div");
+                card.className = "kanban-card";
+                card.draggable = true;
+                card.id = `job-${job.id}`; // CRITICAL FOR DRAG AND DROP!
+                card.ondragstart = drag;
+                
+                // Fallback to "SAVED" if status is null from older database entries
+                const status = job.status || "SAVED"; 
+                
+                // ⚡ Safely escape the summary so the onclick button doesn't break
+                const safeSummary = String(job.briefSummary || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge-match">${job.matchPercentage}% Match</span>
+                        <a href="${job.jobUrl}" target="_blank" style="color: var(--primary-blue); font-size: 0.8rem; text-decoration: none; font-weight: 600;">Link ↗</a>
+                    </div>
+                    <p class="small mb-3" style="line-height: 1.4; color: var(--text-main); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                        ${job.briefSummary}
+                    </p>
+                    
+                    <div class="d-flex justify-content-between mt-auto pt-2 border-top" style="border-color: var(--border-light) !important;">
+                        <span style="cursor: pointer; color: var(--primary-blue); font-size: 0.8rem; font-weight: 600;" onclick="requestCoverLetter('${safeSummary}')">✍️ Write Letter</span>
+                        <span style="cursor: pointer; color: var(--danger-red); font-size: 0.8rem;" onclick="deleteJob(${job.id})">Trash 🗑️</span>
+                    </div>
+                `;
+                
+                // Append to the correct column based on database status!
+                const column = document.getElementById(status);
+                if(column) column.appendChild(card);
+                else document.getElementById("SAVED").appendChild(card);
+            });
+
+            updateCounts();
+
+        } catch (error) { console.error("Failed to load vault.", error); }
+    }
+
+    // ⚡ HTML5 DRAG AND DROP LOGIC
+    function allowDrop(ev) {
+        ev.preventDefault();
+        ev.currentTarget.classList.add("kanban-dropzone");
+    }
+
+    function leaveDrop(ev) {
+        ev.currentTarget.classList.remove("kanban-dropzone");
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+    }
+
+    async function drop(ev) {
+        ev.preventDefault();
+        
+        // Remove highlight
+        const targetColumn = ev.currentTarget;
+        targetColumn.classList.remove("kanban-dropzone");
+
+        const dataId = ev.dataTransfer.getData("text");
+        const card = document.getElementById(dataId);
+        
+        // Move the HTML element to the new column
+        targetColumn.appendChild(card);
+        updateCounts();
+
+        // ⚡ SEND THE UPDATE TO JAVA BACKEND!
+        const jobId = dataId.replace("job-", "");
+        const newStatus = targetColumn.id; // The ID of the column (e.g. "INTERVIEWING")
+
+        try {
+            await fetch("/api/saved-jobs/update-status", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ jobId: jobId, status: newStatus })
+            });
+        } catch (error) {
+            console.error("Failed to update status in DB.");
+        }
+    }
+
+    function updateCounts() {
+        ['SAVED', 'APPLIED', 'INTERVIEWING', 'OFFER', 'REJECTED'].forEach(status => {
+            const column = document.getElementById(status);
+            document.getElementById(`count-${status}`).innerText = column.children.length;
+        });
+    }
+
+    async function deleteJob(jobId) {
+        if (!confirm("Permanently delete this application?")) return; 
+        try {
+            const response = await fetch(`/api/saved-jobs/delete/${jobId}`, { method: "DELETE" });
+            if (response.ok) {
+                document.getElementById(`job-${jobId}`).remove();
+                updateCounts();
+            }
+        } catch (error) { alert("Failed to remove job."); }
+    }
+    
+    // ⚡ The Cover Letter Logic
+    async function requestCoverLetter(jobSummary) {
+        const email = localStorage.getItem("hunter_user");
+        
+        const clModal = new bootstrap.Modal(document.getElementById('coverLetterModal'));
+        clModal.show();
+        
+        document.getElementById("clLoader").classList.remove("d-none");
+        document.getElementById("clOutput").classList.add("d-none");
+        document.getElementById("clCopyBtn").classList.add("d-none");
+
+        try {
+            const response = await fetch("/api/generate-cover-letter", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, jobSummary })
+            });
+            
+            const result = await response.json();
+            
+            document.getElementById("clLoader").classList.add("d-none");
+            document.getElementById("clOutput").value = result.coverLetter;
+            document.getElementById("clOutput").classList.remove("d-none");
+            document.getElementById("clCopyBtn").classList.remove("d-none");
+
+        } catch (error) {
+            document.getElementById("clLoader").innerHTML = "<p class='text-danger fw-bold'>❌ Failed to reach AI engine.</p>";
+        }
+    }
+
+    function copyCoverLetter() {
+        const text = document.getElementById("clOutput");
+        text.select();
+        document.execCommand("copy");
+        
+        const btn = document.getElementById("clCopyBtn");
+        btn.innerHTML = "✅ Copied!";
+        btn.classList.replace("btn-primary", "btn-success");
+        
+        setTimeout(() => {
+            btn.innerHTML = "📋 Copy to Clipboard";
+            btn.classList.replace("btn-success", "btn-primary");
+        }, 2000);
+    }
+</script>
+</body>
+</html>

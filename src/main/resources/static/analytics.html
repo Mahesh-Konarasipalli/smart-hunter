@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartHunter | Analytics Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        function initTheme() {
+            const savedTheme = localStorage.getItem('sh_theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } else {
+                const hour = new Date().getHours();
+                const isNight = hour >= 18 || hour < 6;
+                document.documentElement.setAttribute('data-theme', isNight ? 'dark' : 'light');
+            }
+        }
+        initTheme();
+    </script>
+
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --surface-color: #ffffff;
+            --bg-light: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --chart-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --primary-blue: #3b82f6;
+            --surface-color: #1e293b;
+            --bg-light: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-light: #334155;
+            --chart-bg: #1e293b;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* ⚡ THE FIX: Force Bootstrap to respect our Dark Mode text colors */
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+        
+        p, h1, h2, h3, h4, h5, h6 {
+            color: var(--text-main);
+        }
+
+        .navbar-custom { background: var(--surface-color); border-bottom: 1px solid var(--border-light); padding: 15px 0; }
+        .brand-text { font-weight: 800; letter-spacing: -0.5px; color: var(--text-main); text-decoration: none;}
+        .brand-dot { color: var(--primary-blue); }
+        .nav-link { color: var(--text-muted); font-weight: 500; transition: color 0.2s; }
+        .nav-link:hover { color: var(--primary-blue); }
+
+        .theme-btn { background: transparent; border: 1px solid var(--border-light); color: var(--text-main); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+
+        .header-section { background: var(--surface-color); border-bottom: 1px solid var(--border-light); padding: 40px 0; }
+
+        .chart-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            height: 100%;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            border-left: 4px solid var(--primary-blue);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+    <script>
+        const currentUser = localStorage.getItem("hunter_user");
+        if (!currentUser) window.location.replace("login.html");
+    </script>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container">
+        <a class="navbar-brand brand-text fs-4" href="index.html">SmartHunter<span class="brand-dot">.</span></a>
+        <div class="d-flex align-items-center gap-3">
+            <button class="theme-btn" onclick="toggleTheme()" id="themeIcon">☀️</button>
+            <div class="d-none d-md-flex gap-3 me-3">
+                <a href="index.html" class="nav-link text-decoration-none">Hub</a>
+                <a href="saved-jobs.html" class="nav-link text-decoration-none">Vault</a>
+                <a href="analytics.html" class="nav-link text-decoration-none fw-bold text-primary">Analytics</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<section class="header-section mb-5">
+    <div class="container">
+        <h2 class="fw-bold mb-2">Market Analytics</h2>
+        <p class="text-muted mb-0">Discover your skill gaps based on the jobs you've saved.</p>
+    </div>
+</section>
+
+<div class="container pb-5">
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <p class="text-muted small fw-bold mb-1">TOTAL JOBS ANALYZED</p>
+                <h2 class="fw-bold mb-0" id="totalJobs" style="color: var(--text-main);">0</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card" style="border-left-color: #10b981;">
+                <p class="text-muted small fw-bold mb-1">AVERAGE MATCH SCORE</p>
+                <h2 class="fw-bold mb-0" id="avgScore" style="color: var(--text-main);">0%</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card" style="border-left-color: #f59e0b;">
+                <p class="text-muted small fw-bold mb-1">MOST REQUESTED SKILL</p>
+                <h2 class="fw-bold mb-0" id="topSkill" style="color: var(--text-main);">Loading...</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="chart-card">
+                <h5 class="fw-bold mb-4" style="color: var(--text-main);">Your Top Skill Gaps</h5>
+                <canvas id="skillsChart" height="100"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="chart-card">
+                <h5 class="fw-bold mb-4" style="color: var(--text-main);">Match Distribution</h5>
+                <canvas id="matchChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('sh_theme', newTheme);
+        document.getElementById('themeIcon').innerText = newTheme === 'dark' ? '☀️' : '🌙';
+        
+        if(window.skillsChartInstance) window.skillsChartInstance.destroy();
+        if(window.matchChartInstance) window.matchChartInstance.destroy();
+        loadAnalytics(); 
+    }
+    document.getElementById('themeIcon').innerText = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+
+    window.onload = loadAnalytics;
+
+    async function loadAnalytics() {
+        const email = localStorage.getItem("hunter_user");
+        try {
+            const response = await fetch(`/api/saved-jobs/${email}`);
+            const jobs = await response.json();
+
+            if (!jobs || jobs.length === 0) {
+                document.getElementById("topSkill").innerText = "No Data";
+                return;
+            }
+
+            document.getElementById("totalJobs").innerText = jobs.length;
+            
+            let totalScore = 0;
+            let matchTiers = { high: 0, med: 0, low: 0 };
+            let skillCounts = {};
+
+            jobs.forEach(job => {
+                totalScore += job.matchPercentage;
+                if (job.matchPercentage >= 80) matchTiers.high++;
+                else if (job.matchPercentage >= 60) matchTiers.med++;
+                else matchTiers.low++;
+
+                let missing = job.missingSkills;
+                if (missing && missing !== "None" && missing !== "") {
+                    let skillsArray = Array.isArray(missing) ? missing : missing.split(',');
+                    skillsArray.forEach(s => {
+                        let cleanSkill = s.trim().toUpperCase();
+                        if (cleanSkill && cleanSkill.length > 1) {
+                            skillCounts[cleanSkill] = (skillCounts[cleanSkill] || 0) + 1;
+                        }
+                    });
+                }
+            });
+
+            document.getElementById("avgScore").innerText = Math.round(totalScore / jobs.length) + "%";
+
+            let sortedSkills = Object.entries(skillCounts).sort((a, b) => b[1] - a[1]).slice(0, 6); 
+            
+            if(sortedSkills.length > 0) {
+                document.getElementById("topSkill").innerText = sortedSkills[0][0];
+            } else {
+                document.getElementById("topSkill").innerText = "None!";
+            }
+
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f8fafc' : '#0f172a';
+            const gridColor = isDark ? '#334155' : '#e2e8f0';
+
+            const ctxSkills = document.getElementById('skillsChart').getContext('2d');
+            window.skillsChartInstance = new Chart(ctxSkills, {
+                type: 'bar',
+                data: {
+                    labels: sortedSkills.map(s => s[0]),
+                    datasets: [{
+                        label: 'Frequency across saved jobs',
+                        data: sortedSkills.map(s => s[1]),
+                        backgroundColor: '#2563eb',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1, color: textColor }, grid: { color: gridColor } },
+                        x: { ticks: { color: textColor }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const ctxMatch = document.getElementById('matchChart').getContext('2d');
+            window.matchChartInstance = new Chart(ctxMatch, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High Match (80%+)', 'Medium (60-79%)', 'Low (<60%)'],
+                    datasets: [{
+                        data: [matchTiers.high, matchTiers.med, matchTiers.low],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    plugins: { legend: { position: 'bottom', labels: { color: textColor } } },
+                    cutout: '70%'
+                }
+            });
+
+        } catch (error) {
+            console.error("Analytics Error:", error);
+        }
+    }
+</script>
+</body>
+</html>
