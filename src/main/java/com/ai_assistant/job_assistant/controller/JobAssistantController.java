@@ -57,7 +57,7 @@ public class JobAssistantController {
             resumeText = resumeText.substring(0, 3000);
         }
 
-        System.out.println("🧠 Asking Llama 3 to analyze candidate profile...");
+        System.out.println("🧠 Asking Groq AI to analyze candidate profile...");
         
         ResumeSkills skills = resumeAnalyzer.extractSkills(resumeText);
         String searchKeywords = skills.searchKeywords();
@@ -119,7 +119,7 @@ public class JobAssistantController {
                     content = content.substring(0, 2000);
                 }
 
-                System.out.println("   -> 🧠 Read " + content.length() + " chars. Handing to Llama 3...");
+                System.out.println("   -> 🧠 Read " + content.length() + " chars. Handing to Groq AI...");
                 
                 JobAnalysisResult analysis = jobAnalyst.analyzeJob(content);
 

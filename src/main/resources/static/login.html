@@ -251,23 +251,26 @@
         } catch (e) { showMessage("Server connection failed.", true); }
     }
 
-    async function verifyOtp() {
+   async function verifyOtp() {
         const email = document.getElementById("email").value;
         const otp = document.getElementById("otpCode").value;
         if (!otp) return showMessage("Enter OTP", true);
 
         try {
-            const response = await fetch("/api/auth/verify-otp", {
+            // ⚡ FIX 1: Match the exact URL from the Java Controller
+            const response = await fetch("/api/auth/verify-registration", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, otp })
             });
-            const result = await response.text();
+            
+            // ⚡ FIX 2: Parse as JSON because Java returns a Map<String, String>
+            const result = await response.json();
 
-            if (result.includes("Error")) {
-                showMessage(result, true);
+            if (result.error) {
+                showMessage(result.error, true);
             } else {
-                showMessage("Verified! Redirecting to login...", false);
+                showMessage(result.success + " Redirecting to login...", false);
                 setTimeout(() => location.reload(), 2000);
             }
         } catch (e) { showMessage("Verification failed.", true); }

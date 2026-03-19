@@ -2,6 +2,8 @@ package com.ai_assistant.job_assistant.controller;
 
 import com.ai_assistant.job_assistant.entity.AppUser;
 import com.ai_assistant.job_assistant.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -43,6 +45,41 @@ public class AuthController {
 
         sendOtpEmail(email, otp);
         return "Registration successful. Check email for OTP.";
+    }
+
+    // NEW: Verify Initial Registration
+   @PostMapping("/verify-registration")
+    public Map<String, String> verifyRegistration(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String otp = payload.get("otp");
+        
+        System.out.println("--- VERIFICATION ATTEMPT ---");
+        System.out.println("Email received: '" + email + "'");
+        System.out.println("OTP received: '" + otp + "'");
+
+        AppUser user = userRepository.findByEmail(email).orElse(null);
+        Map<String, String> response = new java.util.HashMap<>();
+
+        if (user == null) {
+            System.out.println("❌ ERROR: User not found in database.");
+            response.put("error", "User not found.");
+            return response;
+        }
+
+        System.out.println("User found! Database OTP is: '" + user.getOtpCode() + "'");
+
+        if (otp != null && otp.equals(user.getOtpCode())) {
+            // Execute the update query and get the number of rows changed
+            int rowsUpdated = userRepository.verifyUserEmail(email);
+            System.out.println("✅ MATCH! Rows updated in MySQL: " + rowsUpdated);
+            
+            response.put("success", "Email verified successfully! You can now log in.");
+            return response;
+        }
+        
+        System.out.println("❌ ERROR: OTP did not match.");
+        response.put("error", "Error: Invalid OTP.");
+        return response;
     }
 
     // 2. Update Login to return Name + Email

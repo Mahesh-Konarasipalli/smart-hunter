@@ -18,8 +18,8 @@ public class AppUser {
     @Column(nullable = false)
     private String password;
 
-    private boolean isVerified = false;
-    
+   @Column(name = "is_verified", columnDefinition = "TINYINT(1)")
+    private boolean verified = false;
     private String otpCode;
     
     private LocalDateTime otpExpiryTime;
