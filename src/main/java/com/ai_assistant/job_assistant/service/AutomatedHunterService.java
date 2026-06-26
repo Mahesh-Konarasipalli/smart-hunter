@@ -1,17 +1,19 @@
 package com.ai_assistant.job_assistant.service;
 
-import com.ai_assistant.job_assistant.entity.AppUser;
-import com.ai_assistant.job_assistant.repository.UserRepository;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.ai_assistant.job_assistant.entity.AppUser;
+import com.ai_assistant.job_assistant.repository.UserRepository;
+
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +34,8 @@ public class AutomatedHunterService {
         System.out.println("⏰ 9:00 AM IST - Initiating Personalized Morning Job Hunts...");
 
         List<AppUser> verifiedUsers = userRepository.findAll().stream()
-            .filter(u -> u.isVerified())
-            .collect(Collectors.toList());
+                .filter(AppUser::isVerified)
+                .collect(Collectors.toList());
 
         if (verifiedUsers.isEmpty()) {
             System.out.println("⚠️ No verified users found in the database. Skipping.");
