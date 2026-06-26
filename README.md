@@ -65,12 +65,12 @@
 <div align="center">
   <table>
     <tr>
-      <td align="center"><b>Admin Login (Dark Mode)</b><br><img src="screenshots/admin_loginpage.png" width="400" alt="Login Dark Mode"></td>
-      <td align="center"><b>Admin Dashboard</b><br><img src="screenshots/Admin_dashboard.png" width="400" alt="Admin Dashboard"></td>
+      <td align="center"><b>Login Page</b><br><img src="Screenshots/Loginpage.png" width="400" alt="Login Page"></td>
+      <td align="center"><b>Signup Page</b><br><img src="Screenshots/Signuppage.png" width="400" alt="Signup Page"></td>
     </tr>
     <tr>
-      <td align="center"><b>Student Dashboard</b><br><img src="screenshots/Student_dashboard.png" width="400" alt="Student Dashboard"></td>
-      <td align="center"><b>Student Login</b><br><img src="screenshots/student_loginpage.png" width="400" alt="Student Login"></td>
+      <td align="center"><b>Home Page in Dark Mode</b><br><img src="Screenshots/Homepage.png" width="400" alt="Home Page in Dark Mode"></td>
+      <td align="center"><b>Home Page in Light Mode</b><br><img src="Screenshots/daymode.png" width="400" alt="Home Page in Light Mode"></td>
     </tr>
   </table>
 </div>
