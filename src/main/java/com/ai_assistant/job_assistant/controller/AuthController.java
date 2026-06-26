@@ -42,6 +42,7 @@ public class AuthController {
         user.setOtpCode(otp);
         userRepository.save(user);
 
+        System.out.println("🚨 HACKER BYPASS - OTP for " + user.getEmail() + " is: " + otpCode);
         sendOtpEmail(email, otp);
         return "Registration successful. Check email for OTP.";
     }
