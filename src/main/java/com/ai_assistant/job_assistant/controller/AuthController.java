@@ -40,7 +40,6 @@ public class AuthController {
         
         String otp = String.format("%06d", new java.util.Random().nextInt(999999));
         user.setOtpCode(otp);
-        user.setVerified(false);
         userRepository.save(user);
 
         sendOtpEmail(email, otp);

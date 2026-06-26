@@ -32,8 +32,8 @@ public class AutomatedHunterService {
         System.out.println("⏰ 9:00 AM IST - Initiating Personalized Morning Job Hunts...");
 
         List<AppUser> verifiedUsers = userRepository.findAll().stream()
-                .filter(AppUser::isVerified)
-                .collect(Collectors.toList());
+            .filter(u -> u.isVerified())
+            .collect(Collectors.toList());
 
         if (verifiedUsers.isEmpty()) {
             System.out.println("⚠️ No verified users found in the database. Skipping.");
