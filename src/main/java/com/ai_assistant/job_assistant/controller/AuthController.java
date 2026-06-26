@@ -1,18 +1,18 @@
 package com.ai_assistant.job_assistant.controller;
 
+import java.util.Map;
+
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.ai_assistant.job_assistant.entity.AppUser;
 import com.ai_assistant.job_assistant.repository.UserRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -38,13 +38,18 @@ public class AuthController {
         user.setPassword(password); // Note: In production, use BCrypt!
         user.setName(name);
         
+        // Generate the OTP
         String otp = String.format("%06d", new java.util.Random().nextInt(999999));
         user.setOtpCode(otp);
         userRepository.save(user);
+        
+        // 🚨 HACKER BYPASS: Print the OTP directly to Render's logs!
+        System.out.println("🚨 HACKER BYPASS - OTP for " + email + " is: " + otp);
+        
+        // 🛑 We comment this out so Render doesn't try to use Port 587 and crash
+        // sendOtpEmail(email, otp); 
 
-        System.out.println("🚨 HACKER BYPASS - OTP for " + user.getEmail() + " is: " + otpCode);
-        sendOtpEmail(email, otp);
-        return "Registration successful. Check email for OTP.";
+        return "Registration successful. Check the Render Logs for your OTP!";
     }
 
     // NEW: Verify Initial Registration
