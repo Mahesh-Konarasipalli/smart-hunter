@@ -81,7 +81,7 @@
 **1. Clone the Repository:**
 ```bash
 git clone [https://github.com/Mahesh-Konarasipalli/smart-hunter.git](https://github.com/Mahesh-Konarasipalli/smart-hunter.git)
-
+```
 **2. Configure Environment:**
 Set the following environment variables locally or in your cloud platform:
 
